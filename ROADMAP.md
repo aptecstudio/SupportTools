@@ -11,23 +11,30 @@ Tool di supporto tecnico per Windows (da Windows 7 in poi), scritto in Go, compi
 - [x] Creazione `AGENTS.md`, `ROADMAP.md`, `MEMORY.md`, `CHANGELOG.md`, `README.md`
 - [x] Definizione vincoli di compatibilità (Windows 7+) e toolchain Go
 - [x] Scelta della libreria per l'interfaccia grafica (lxn/walk) e della lingua dell'interfaccia (italiano)
-- [ ] Struttura del progetto Go (moduli, cartelle, sistema a moduli dell'interfaccia)
-- [ ] Script di build cross-platform (Linux, Windows, macOS → eseguibile Windows)
-- [ ] Manifest dell'applicazione (privilegi di amministratore, stili visuali)
-- [ ] Componente riutilizzabile di avanzamento per le operazioni lente: barra con percentuale, tempo rimanente, sezione "Dettagli" espandibile con le operazioni concluse e in lavorazione
+- [x] Struttura del progetto Go (moduli, cartelle, sistema a moduli dell'interfaccia)
+- [x] Finestra principale con barra laterale e primo tool "Informazioni"
+- [x] Script di build cross-platform (Linux, Windows, macOS → eseguibile Windows): `go run ./build`
+- [x] Manifest dell'applicazione (privilegi di amministratore, stili visuali)
+- [ ] Verifica dell'avvio su Windows 7 e Windows 10/11 (x86 e x64), compreso il componente di avanzamento (build `-tags demo`)
+- [ ] Icona dell'applicazione (`cmd/supporttools/supporttools.ico`)
+- [x] Componente riutilizzabile di avanzamento per le operazioni lente: barra con percentuale, tempo rimanente, sezione "Dettagli" espandibile con le operazioni concluse e in lavorazione
 - [x] Licenza GPL v3.0 o successive e verifica di compatibilità con Go
 - [x] File `THIRD_PARTY_NOTICES.md` con gli avvisi di licenza di terze parti
 - [x] Aggiunta degli avvisi di lxn/walk, lxn/win, golang.org/x/sys e govaluate all'introduzione delle dipendenze
-- [x] Script di installazione delle dipendenze di sviluppo (`scripts/setup.sh`)
+- [x] Wine tra le dipendenze di Linux e macOS e avvio di prova con `go run ./build -run`
+- [x] Script di installazione delle dipendenze di sviluppo per Linux, macOS e Windows (`scripts/setup-linux.sh`, `scripts/setup-macos.sh`, `scripts/setup-windows.ps1`)
 - [x] Definizione del canale di distribuzione (GitHub Releases)
 - [ ] Pubblicazione automatica dell'eseguibile su GitHub Releases alla creazione di un tag `vX.Y.Z`
 
 ## Fase 1 — Gestione utenti locali
 
-- [ ] Creazione utente locale (nome, nome completo, password, gruppo: Utenti/Amministratori)
-- [ ] Eliminazione completa di un utente locale (account, profilo, cartella utente, voci di registro del profilo)
-- [ ] Cambio password di un utente locale
-- [ ] Rimozione della password di un utente locale
+- [x] Pagina unica "Gestione utenti" con l'elenco di tutti gli account locali (nome, nome completo, tipo, stato)
+- [~] Creazione utente locale (nome, nome completo, password, gruppo: Utenti/Amministratori, "password senza scadenza", "cambio al primo accesso") — implementata, da verificare su Windows
+- [~] Eliminazione completa di un utente locale (account, profilo, cartella utente, voci di registro del profilo) con conferma digitando il nome e avanzamento — implementata, da verificare su Windows
+- [~] Cambio password di un utente locale — implementato, da verificare su Windows
+- [~] Rimozione della password di un utente locale — implementata, da verificare su Windows
+- [ ] Verifica completa su Windows 7 e Windows 10/11 (x86 e x64), compresi Windows in lingue diverse dall'italiano
+- [ ] Valutare la presa di possesso dei file protetti del profilo che l'amministratore non può eliminare (oggi vengono segnalati)
 
 → **Rilascio `v0.1.0`** al primo funzionamento concreto.
 
