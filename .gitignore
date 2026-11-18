@@ -1,0 +1,16 @@
+# Eseguibili e artefatti di build
+/bin/
+/dist/
+*.exe
+*.syso
+
+# Test e coverage
+*.test
+*.out
+coverage.html
+
+# Editor e sistema operativo
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
