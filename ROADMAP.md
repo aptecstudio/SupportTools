@@ -14,6 +14,9 @@ Tool di supporto tecnico per Windows (da Windows 7 in poi), scritto in Go, compi
 - [ ] Struttura del progetto Go (moduli, cartelle, sistema a moduli dell'interfaccia)
 - [ ] Script di build cross-platform (Linux, Windows, macOS → eseguibile Windows)
 - [ ] Manifest dell'applicazione (privilegi di amministratore, stili visuali)
+- [x] Licenza GPL v3.0
+- [x] Definizione del canale di distribuzione (GitHub Releases)
+- [ ] Pubblicazione automatica dell'eseguibile su GitHub Releases alla creazione di un tag `vX.Y.Z`
 
 ## Fase 1 — Gestione utenti locali
 

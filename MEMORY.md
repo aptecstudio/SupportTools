@@ -25,6 +25,14 @@ Registro delle scelte tecniche e delle convenzioni. Ogni voce riporta data e mot
 - Libreria GUI: **[lxn/walk](https://github.com/lxn/walk)**, controlli nativi Win32, senza CGO, compatibile con Windows 7 e cross-compilabile da qualsiasi sistema.
 - Testi dell'interfaccia **solo in italiano**, scritti direttamente nel codice.
 
+### 2026-11-18 — Distribuzione
+- La distribuzione avviene **direttamente da GitHub** (`aptecstudio/SupportTools`).
+- Ogni rilascio pubblica su **GitHub Releases** l'eseguibile pronto all'uso (`SupportTools.exe`) insieme ai sorgenti, che restano scaricabili e compilabili da chiunque.
+
+### 2026-11-18 — Licenza
+- Il progetto è distribuito con licenza **GNU GPL v3.0** (file `LICENSE`).
+- Le dipendenze devono avere licenze compatibili con la GPL v3.0 (lxn/walk è BSD-3-Clause: compatibile).
+
 ## Convenzioni
 
 ### Git

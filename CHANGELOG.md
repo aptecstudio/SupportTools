@@ -7,3 +7,5 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it-IT/1.1.0/) e i
 
 ### Aggiunto
 - Inizializzazione del progetto: `AGENTS.md`, `ROADMAP.md`, `MEMORY.md`, `README.md`, `go.mod`.
+- Licenza GNU GPL v3.0.
+- Distribuzione tramite GitHub Releases (eseguibile e sorgenti).

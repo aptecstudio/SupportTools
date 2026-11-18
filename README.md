@@ -14,7 +14,22 @@ Tool di supporto tecnico per Windows (da Windows 7 in poi), scritto in Go, con i
 
 Dettagli e stato di avanzamento in [ROADMAP.md](ROADMAP.md); scelte tecniche in [MEMORY.md](MEMORY.md).
 
-## Requisiti di build
+## Download
+
+La distribuzione avviene direttamente da GitHub:
+
+- **Eseguibile pronto all'uso:** scarica `SupportTools.exe` dalla pagina [Releases](https://github.com/aptecstudio/SupportTools/releases) (disponibile dalla prima versione).
+- **Sorgenti:** clona il repository o scarica l'archivio dei sorgenti dalla stessa pagina e compila in autonomia.
+
+## Build dai sorgenti
+
+Requisiti:
 
 - Go 1.20.x (necessario per la compatibilità con Windows 7)
 - Qualsiasi sistema operativo tra Linux, Windows e macOS
+
+Le istruzioni di compilazione saranno aggiunte insieme allo script di build.
+
+## Licenza
+
+Support Tools è software libero distribuito secondo i termini della [GNU General Public License v3.0](LICENSE).
