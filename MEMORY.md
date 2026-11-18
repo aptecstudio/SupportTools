@@ -21,6 +21,10 @@ Registro delle scelte tecniche e delle convenzioni. Ogni voce riporta data e mot
 ### 2026-11-18 — Privilegi
 - Le funzioni di gestione utenti e copia profili richiedono l'esecuzione come amministratore (manifest con `requireAdministrator`).
 
+### 2026-11-18 — Interfaccia grafica
+- Libreria GUI: **[lxn/walk](https://github.com/lxn/walk)**, controlli nativi Win32, senza CGO, compatibile con Windows 7 e cross-compilabile da qualsiasi sistema.
+- Testi dell'interfaccia **solo in italiano**, scritti direttamente nel codice.
+
 ## Convenzioni
 
 ### Git
@@ -34,6 +38,4 @@ Registro delle scelte tecniche e delle convenzioni. Ogni voce riporta data e mot
 
 ## Da decidere
 
-- Libreria per l'interfaccia grafica.
-- Lingua dei testi dell'interfaccia utente (solo italiano o multilingua).
 - Formato del pacchetto di backup (cartella, archivio ZIP, cifratura).

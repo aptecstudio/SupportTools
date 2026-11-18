@@ -10,7 +10,7 @@ Tool di supporto tecnico per Windows (da Windows 7 in poi), scritto in Go, compi
 
 - [x] Creazione `AGENTS.md`, `ROADMAP.md`, `MEMORY.md`, `CHANGELOG.md`, `README.md`
 - [x] Definizione vincoli di compatibilità (Windows 7+) e toolchain Go
-- [ ] Scelta della libreria per l'interfaccia grafica
+- [x] Scelta della libreria per l'interfaccia grafica (lxn/walk) e della lingua dell'interfaccia (italiano)
 - [ ] Struttura del progetto Go (moduli, cartelle, sistema a moduli dell'interfaccia)
 - [ ] Script di build cross-platform (Linux, Windows, macOS → eseguibile Windows)
 - [ ] Manifest dell'applicazione (privilegi di amministratore, stili visuali)
