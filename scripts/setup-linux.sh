@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
-# Installa le dipendenze di sviluppo di Support Tools su Linux e macOS:
+# Installa le dipendenze di sviluppo di Support Tools su Linux:
 #   - toolchain Go 1.20.14 in /usr/local/go (richiede sudo);
 #   - strumenti di sviluppo: rsrc (manifest/icona) e goimports;
-#   - moduli Go elencati in go.mod.
+#   - moduli Go elencati in go.mod;
+#   - Wine, per provare l'eseguibile senza Windows (go run ./build -run).
 #
 # Lo script è idempotente: può essere rieseguito senza effetti collaterali.
-# Uso: scripts/setup.sh [--force]
+# Uso: scripts/setup-linux.sh [--force]
 #   --force  sostituisce un'eventuale versione di Go diversa già presente
 #            in /usr/local/go.
 
@@ -38,7 +39,8 @@ parse_args() {
 		case "$arg" in
 		--force) force=1 ;;
 		-h | --help)
-			sed -n '3,13p' "$0" | sed 's/^# \{0,1\}//'
+			# Stampa il commento iniziale dello script (dalla terza riga).
+			awk 'NR > 2 && /^#/ { sub(/^# ?/, ""); print; next } NR > 2 { exit }' "$0"
 			exit 0
 			;;
 		*) fail "Argomento sconosciuto: $arg" ;;
@@ -48,12 +50,7 @@ parse_args() {
 
 # go_archive stampa "nomefile sha256" dell'archivio Go adatto al sistema.
 go_archive() {
-	local os arch
-	case "$(uname -s)" in
-	Linux) os="linux" ;;
-	Darwin) os="darwin" ;;
-	*) fail "Sistema operativo non supportato: $(uname -s). Su Windows installa Go ${GO_VERSION} da https://go.dev/dl/." ;;
-	esac
+	local os="linux" arch
 	case "$(uname -m)" in
 	x86_64 | amd64) arch="amd64" ;;
 	aarch64 | arm64) arch="arm64" ;;
@@ -68,29 +65,24 @@ go_archive() {
 	go1.20.14.linux-amd64.tar.gz) sum="ff445e48af27f93f66bd949ae060d97991c83e11289009d311f25426258f9c44" ;;
 	go1.20.14.linux-arm64.tar.gz) sum="2096507509a98782850d1f0669786c09727053e9fe3c92b03c0d96f48700282b" ;;
 	go1.20.14.linux-386.tar.gz) sum="9c0acad376b41292c6e9e5534e26d9432f92a214d6c40a7e4c024b0235cc30e8" ;;
-	go1.20.14.darwin-amd64.tar.gz) sum="754363489e2244e72cb49b4ec6ddfd6a2c60b0700f8c4876e11befb1913b11c5" ;;
-	go1.20.14.darwin-arm64.tar.gz) sum="6da3f76164b215053daf730a9b8f1d673dbbaa4c61031374a6744b75cb728641" ;;
 	*) fail "Nessun archivio Go disponibile per ${os}/${arch}" ;;
 	esac
 	printf '%s %s\n' "$file" "$sum"
 }
 
 sha256() {
-	if command -v sha256sum >/dev/null 2>&1; then
-		sha256sum "$1" | cut -d' ' -f1
-	else
-		shasum -a 256 "$1" | cut -d' ' -f1
-	fi
+	sha256sum "$1" | cut -d' ' -f1
 }
 
 check_requirements() {
+	if [[ "$(uname -s)" != "Linux" ]]; then
+		fail "Questo script è per Linux: su macOS usa scripts/setup-macos.sh, su Windows scripts/setup-windows.ps1."
+	fi
+
 	local missing=()
-	for cmd in curl tar git sudo; do
+	for cmd in curl tar git sudo sha256sum; do
 		command -v "$cmd" >/dev/null 2>&1 || missing+=("$cmd")
 	done
-	if ! command -v sha256sum >/dev/null 2>&1 && ! command -v shasum >/dev/null 2>&1; then
-		missing+=("sha256sum")
-	fi
 	if ((${#missing[@]} > 0)); then
 		fail "Comandi mancanti: ${missing[*]}. Installali e rilancia lo script."
 	fi
@@ -168,6 +160,50 @@ download_modules() {
 	(cd "$root" && go mod download && go mod verify)
 }
 
+# install_wine installa Wine con il gestore di pacchetti della distribuzione.
+install_wine() {
+	if command -v wine >/dev/null 2>&1; then
+		info "Wine già installato: $(wine --version 2>/dev/null || echo 'versione sconosciuta')"
+		return
+	fi
+	case "$(uname -m)" in
+	x86_64 | amd64 | i386 | i686) ;;
+	*)
+		warn "Wine non installato: su $(uname -m) non può eseguire programmi Windows per x86."
+		return
+		;;
+	esac
+
+	local id="" like=""
+	if [[ -r /etc/os-release ]]; then
+		# shellcheck disable=SC1091 # file di sistema
+		id="$(. /etc/os-release && echo "${ID:-}")"
+		# shellcheck disable=SC1091
+		like="$(. /etc/os-release && echo "${ID_LIKE:-}")"
+	fi
+
+	info "Installazione di Wine (richiede sudo)"
+	case " ${id} ${like} " in
+	*" debian "* | *" ubuntu "*)
+		if [[ "$(dpkg --print-architecture)" == "amd64" ]]; then
+			# La parte a 32 bit di Wine serve per provare l'eseguibile x86.
+			if ! dpkg --print-foreign-architectures | grep -qx i386; then
+				sudo dpkg --add-architecture i386
+			fi
+			sudo apt-get update
+			sudo apt-get install -y wine wine64 wine32:i386
+		else
+			sudo apt-get update
+			sudo apt-get install -y wine
+		fi
+		;;
+	*" fedora "*) sudo dnf install -y wine ;;
+	*" arch "*) sudo pacman -S --needed --noconfirm wine ;;
+	*" suse "* | *" opensuse "*) sudo zypper --non-interactive install wine ;;
+	*) fail "Distribuzione non riconosciuta (${id:-sconosciuta}): installa Wine con il gestore di pacchetti e rilancia lo script." ;;
+	esac
+}
+
 main() {
 	parse_args "$@"
 	check_requirements
@@ -175,6 +211,7 @@ main() {
 	configure_path
 	install_tools
 	download_modules
+	install_wine
 
 	info "Completato: $(go version)"
 	echo "Apri un nuovo terminale (o esegui 'source ~/.profile') per avere go nel PATH."
