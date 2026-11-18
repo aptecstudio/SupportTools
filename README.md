@@ -28,6 +28,14 @@ Requisiti:
 - Go 1.20.x (necessario per la compatibilità con Windows 7)
 - Qualsiasi sistema operativo tra Linux, Windows e macOS
 
+Su Linux e macOS l'ambiente di sviluppo (Go 1.20.14, `rsrc`, `goimports` e i moduli Go) si installa con:
+
+```sh
+scripts/setup.sh
+```
+
+Lo script usa `sudo` per installare Go in `/usr/local/go`; se è già presente un'altra versione si ferma (usa `--force` per sostituirla).
+
 Le istruzioni di compilazione saranno aggiunte insieme allo script di build.
 
 ## Licenza

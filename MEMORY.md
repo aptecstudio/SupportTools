@@ -25,6 +25,14 @@ Registro delle scelte tecniche e delle convenzioni. Ogni voce riporta data e mot
 - Libreria GUI: **[lxn/walk](https://github.com/lxn/walk)**, controlli nativi Win32, senza CGO, compatibile con Windows 7 e cross-compilabile da qualsiasi sistema.
 - Testi dell'interfaccia **solo in italiano**, scritti direttamente nel codice.
 
+### 2026-11-18 — Avanzamento delle operazioni lunghe
+- Ogni tool che esegue operazioni lente (backup, ripristino, eliminazione profili, copie, ecc.) mostra una finestra o sezione di avanzamento con:
+  - **barra di avanzamento** con **percentuale**;
+  - **tempo rimanente stimato**;
+  - sotto, una **sezione "Dettagli" espandibile** con l'elenco delle operazioni **concluse** e di quella **in lavorazione**.
+- È un componente unico e riutilizzabile da tutti i moduli, così che ogni tool lo usi allo stesso modo.
+- Le operazioni lente girano fuori dal thread dell'interfaccia, che resta reattiva; gli aggiornamenti arrivano alla GUI tramite il meccanismo di sincronizzazione di walk.
+
 ### 2026-11-18 — Distribuzione
 - La distribuzione avviene **direttamente da GitHub** (`aptecstudio/SupportTools`).
 - Ogni rilascio pubblica su **GitHub Releases** l'eseguibile pronto all'uso (`SupportTools.exe`) insieme ai sorgenti, che restano scaricabili e compilabili da chiunque.
@@ -41,6 +49,16 @@ Registro delle scelte tecniche e delle convenzioni. Ogni voce riporta data e mot
   - allegare `LICENSE` e `THIRD_PARTY_NOTICES.md` (le licenze BSD richiedono di riprodurre gli avvisi di copyright anche nelle distribuzioni binarie);
   - rendere disponibili i sorgenti corrispondenti alla versione rilasciata (assolto dal tag Git e dall'archivio sorgenti di GitHub Releases).
 - Ogni nuova dipendenza va verificata e il suo avviso di licenza aggiunto a `THIRD_PARTY_NOTICES.md`.
+
+### 2026-11-18 — Dipendenze e ambiente di sviluppo
+- Lo script `scripts/setup.sh` (Linux e macOS) installa l'ambiente di sviluppo ed è idempotente:
+  - Go 1.20.14 in `/usr/local/go` (con sudo), con verifica del checksum ufficiale; se è presente un'altra versione si ferma, salvo `--force`;
+  - aggiunge `/usr/local/go/bin` e `~/go/bin` al `PATH` in `~/.profile`;
+  - installa `rsrc` v0.10.2 (MIT, solo strumento di build: incorpora manifest e icona nell'eseguibile) e `goimports` da `golang.org/x/tools` v0.24.0 (ultima versione compatibile con Go 1.20);
+  - scarica e verifica i moduli di `go.mod`.
+- Moduli Go adottati: `lxn/walk` (v0.0.0-20210112085537-c389da54e794) e `lxn/win` (v0.0.0-20210218163916-a377121e959e), ultime versioni disponibili; portano con sé `golang.org/x/sys` (v0.0.0-20201018230417-eeed37f84f13) e `gopkg.in/Knetic/govaluate.v3` v3.0.0 (MIT, compatibile con la GPL v3).
+- Finché il codice non importa walk, in `go.mod` le dipendenze risultano `// indirect`: **non eseguire `go mod tidy`** prima di averle importate, altrimenti vengono rimosse.
+- Variabile `GOTOOLCHAIN=local` per evitare che gli strumenti richiedano una versione di Go più recente.
 
 ## Convenzioni
 
