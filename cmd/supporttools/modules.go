@@ -8,4 +8,5 @@ package main
 // funzione init. Per aggiungere un tool basta aggiungerne qui l'import.
 import (
 	_ "github.com/aptecstudio/supporttools/internal/modules/about"
+	_ "github.com/aptecstudio/supporttools/internal/modules/localusers"
 )
