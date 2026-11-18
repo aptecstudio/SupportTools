@@ -30,8 +30,17 @@ Registro delle scelte tecniche e delle convenzioni. Ogni voce riporta data e mot
 - Ogni rilascio pubblica su **GitHub Releases** l'eseguibile pronto all'uso (`SupportTools.exe`) insieme ai sorgenti, che restano scaricabili e compilabili da chiunque.
 
 ### 2026-11-18 — Licenza
-- Il progetto è distribuito con licenza **GNU GPL v3.0** (file `LICENSE`).
-- Le dipendenze devono avere licenze compatibili con la GPL v3.0 (lxn/walk è BSD-3-Clause: compatibile).
+- Il progetto è distribuito con licenza **GNU GPL v3.0 o successive** (SPDX: `GPL-3.0-or-later`, file `LICENSE`).
+- Le dipendenze devono avere licenze compatibili con la GPL v3.0. Compatibili: BSD, MIT, Apache-2.0, LGPL. Incompatibili: GPL-2.0-only, licenze proprietarie o con restrizioni d'uso.
+- Verifica di compatibilità (2026-11-18):
+  - Toolchain, runtime e libreria standard di Go: BSD-3-Clause, più una concessione di brevetti che non aggiunge vincoli. Compatibili. Il compilatore non impone clausole sul codice compilato.
+  - lxn/walk e lxn/win: BSD-3-Clause. Compatibili.
+  - golang.org/x/sys: BSD-3-Clause. Compatibile.
+  - DLL di sistema di Windows: rientrano nell'eccezione "System Libraries" della GPL v3, nessun obbligo.
+- Obblighi a ogni rilascio dell'eseguibile:
+  - allegare `LICENSE` e `THIRD_PARTY_NOTICES.md` (le licenze BSD richiedono di riprodurre gli avvisi di copyright anche nelle distribuzioni binarie);
+  - rendere disponibili i sorgenti corrispondenti alla versione rilasciata (assolto dal tag Git e dall'archivio sorgenti di GitHub Releases).
+- Ogni nuova dipendenza va verificata e il suo avviso di licenza aggiunto a `THIRD_PARTY_NOTICES.md`.
 
 ## Convenzioni
 
@@ -42,6 +51,7 @@ Registro delle scelte tecniche e delle convenzioni. Ogni voce riporta data e mot
 
 ### Codice
 - Codice e nomenclature in inglese, commenti in italiano.
+- Ogni file sorgente inizia con l'intestazione `// SPDX-License-Identifier: GPL-3.0-or-later`.
 - Formattazione con `gofmt`, controllo con `go vet` prima di ogni commit.
 
 ## Da decidere

@@ -14,7 +14,9 @@ Tool di supporto tecnico per Windows (da Windows 7 in poi), scritto in Go, compi
 - [ ] Struttura del progetto Go (moduli, cartelle, sistema a moduli dell'interfaccia)
 - [ ] Script di build cross-platform (Linux, Windows, macOS → eseguibile Windows)
 - [ ] Manifest dell'applicazione (privilegi di amministratore, stili visuali)
-- [x] Licenza GPL v3.0
+- [x] Licenza GPL v3.0 o successive e verifica di compatibilità con Go
+- [x] File `THIRD_PARTY_NOTICES.md` con gli avvisi di licenza di terze parti
+- [ ] Aggiunta degli avvisi di lxn/walk, lxn/win e golang.org/x/sys all'introduzione delle dipendenze
 - [x] Definizione del canale di distribuzione (GitHub Releases)
 - [ ] Pubblicazione automatica dell'eseguibile su GitHub Releases alla creazione di un tag `vX.Y.Z`
 

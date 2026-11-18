@@ -32,4 +32,6 @@ Le istruzioni di compilazione saranno aggiunte insieme allo script di build.
 
 ## Licenza
 
-Support Tools è software libero distribuito secondo i termini della [GNU General Public License v3.0](LICENSE).
+Support Tools è software libero: puoi redistribuirlo e/o modificarlo secondo i termini della [GNU General Public License](LICENSE), versione 3 o (a tua scelta) qualsiasi versione successiva.
+
+Gli avvisi di licenza dei componenti di terze parti sono in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
