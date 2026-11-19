@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// Il programma build compila SupportTools.exe per Windows a 32 e 64 bit da
+// Il programma build compila SupportTools.exe per Windows a 64 bit da
 // qualsiasi sistema (Linux, macOS, Windows).
 //
 // Va eseguito dalla radice del repository:
 //
-//	go run ./build [-arch all|x64|x86] [-tags demo] [-skip-checks] [-run]
+//	go run ./build [-arch all|x64] [-tags demo] [-skip-checks] [-run]
 //
 // Passaggi:
 //  1. verifica che la toolchain sia Go 1.20.x (l'ultima che supporta Windows 7);
@@ -16,7 +16,7 @@
 //     prova) finiscono nel nome della cartella: dist/<arch>-<tag>/;
 //  5. copia accanto all'eseguibile LICENSE e THIRD_PARTY_NOTICES.md, che
 //     vanno distribuiti con il programma;
-//  6. con -run avvia l'eseguibile appena compilato (x64, salvo -arch x86):
+//  6. con -run avvia l'eseguibile appena compilato (x64):
 //     su Windows direttamente, su Linux e macOS con Wine, in un prefisso
 //     dedicato che non tocca quello predefinito dell'utente.
 package main
@@ -49,20 +49,19 @@ const (
 
 // target è un'architettura Windows di destinazione.
 type target struct {
-	name   string // nome usato per la cartella in dist (x64, x86)
+	name   string // nome usato per la cartella in dist (x64)
 	goarch string
 }
 
 var targets = []target{
 	{name: "x64", goarch: "amd64"},
-	{name: "x86", goarch: "386"},
 }
 
 // releaseFiles vanno distribuiti insieme all'eseguibile (obblighi di licenza).
 var releaseFiles = []string{"LICENSE", "THIRD_PARTY_NOTICES.md"}
 
 func main() {
-	arch := flag.String("arch", "all", "architettura da compilare: all, x64 o x86")
+	arch := flag.String("arch", "all", "architettura da compilare: all o x64")
 	tags := flag.String("tags", "", "tag di build aggiuntivi separati da virgola (es. demo)")
 	skipChecks := flag.Bool("skip-checks", false, "salta i controlli gofmt e go vet")
 	launchExe := flag.Bool("run", false, "avvia l'eseguibile dopo la compilazione (con Wine su Linux e macOS)")
@@ -192,7 +191,7 @@ func selectTargets(arch string) ([]target, error) {
 			return []target{t}, nil
 		}
 	}
-	return nil, fmt.Errorf("architettura sconosciuta %q: usa all, x64 o x86", arch)
+	return nil, fmt.Errorf("architettura sconosciuta %q: usa all o x64", arch)
 }
 
 func readVersion() (string, error) {
@@ -220,7 +219,7 @@ func checkGoVersion() error {
 }
 
 // checkCode verifica che il codice sia formattato e superi go vet, per
-// entrambe le architetture Windows.
+// l'architettura Windows x64.
 func checkCode(tags string) error {
 	info("Controllo della formattazione (gofmt)")
 	out, err := output(nil, "gofmt", "-l", ".")

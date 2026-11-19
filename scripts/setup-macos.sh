@@ -7,7 +7,9 @@
 #   - moduli Go elencati in go.mod;
 #   - Wine (build ufficiale per macOS) in /Applications, per provare
 #     l'eseguibile senza Windows (go run ./build -run); su Apple Silicon
-#     installa anche Rosetta 2, necessaria a Wine.
+#     installa anche Rosetta 2, necessaria a Wine;
+#   - QEMU con Homebrew, per le macchine virtuali Windows di test
+#     (go run ./vm).
 #
 # Lo script è idempotente: può essere rieseguito senza effetti collaterali.
 # Uso: scripts/setup-macos.sh [--force]
@@ -256,6 +258,31 @@ install_wine() {
 	} >>"$profile"
 }
 
+# install_qemu installa QEMU con Homebrew. Il CD dell'installazione non
+# presidiata si crea con hdiutil, già incluso in macOS.
+install_qemu() {
+	if command -v qemu-system-x86_64 >/dev/null 2>&1; then
+		info "QEMU già installato: $(qemu-system-x86_64 --version | head -n1)"
+	else
+		local brew=""
+		for candidate in brew /opt/homebrew/bin/brew /usr/local/bin/brew; do
+			if command -v "$candidate" >/dev/null 2>&1; then
+				brew="$candidate"
+				break
+			fi
+		done
+		if [[ -z "$brew" ]]; then
+			fail "Homebrew non trovato: installalo da https://brew.sh e rilancia lo script per avere QEMU."
+		fi
+		info "Installazione di QEMU con Homebrew"
+		"$brew" install qemu
+	fi
+
+	if [[ "$(sysctl -n hw.optional.arm64 2>/dev/null || echo 0)" == "1" ]]; then
+		warn "Su Apple Silicon Windows x64 nelle macchine virtuali è solo emulato e molto lento."
+	fi
+}
+
 main() {
 	parse_args "$@"
 	check_requirements
@@ -264,6 +291,7 @@ main() {
 	install_tools
 	download_modules
 	install_wine
+	install_qemu
 
 	info "Completato: $(go version)"
 	echo "Apri un nuovo terminale (o esegui 'source $(login_profile)') per avere go nel PATH."

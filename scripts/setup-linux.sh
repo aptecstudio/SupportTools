@@ -5,7 +5,8 @@
 #   - toolchain Go 1.20.14 in /usr/local/go (richiede sudo);
 #   - strumenti di sviluppo: rsrc (manifest/icona) e goimports;
 #   - moduli Go elencati in go.mod;
-#   - Wine, per provare l'eseguibile senza Windows (go run ./build -run).
+#   - Wine, per provare l'eseguibile senza Windows (go run ./build -run);
+#   - QEMU e xorriso, per le macchine virtuali Windows di test (go run ./vm).
 #
 # Lo script è idempotente: può essere rieseguito senza effetti collaterali.
 # Uso: scripts/setup-linux.sh [--force]
@@ -160,20 +161,9 @@ download_modules() {
 	(cd "$root" && go mod download && go mod verify)
 }
 
-# install_wine installa Wine con il gestore di pacchetti della distribuzione.
-install_wine() {
-	if command -v wine >/dev/null 2>&1; then
-		info "Wine già installato: $(wine --version 2>/dev/null || echo 'versione sconosciuta')"
-		return
-	fi
-	case "$(uname -m)" in
-	x86_64 | amd64 | i386 | i686) ;;
-	*)
-		warn "Wine non installato: su $(uname -m) non può eseguire programmi Windows per x86."
-		return
-		;;
-	esac
-
+# distro_family stampa la famiglia della distribuzione: debian, fedora,
+# arch, suse o unknown.
+distro_family() {
 	local id="" like=""
 	if [[ -r /etc/os-release ]]; then
 		# shellcheck disable=SC1091 # file di sistema
@@ -181,27 +171,81 @@ install_wine() {
 		# shellcheck disable=SC1091
 		like="$(. /etc/os-release && echo "${ID_LIKE:-}")"
 	fi
+	case " ${id} ${like} " in
+	*" debian "* | *" ubuntu "*) echo debian ;;
+	*" fedora "*) echo fedora ;;
+	*" arch "*) echo arch ;;
+	*" suse "* | *" opensuse "*) echo suse ;;
+	*) echo unknown ;;
+	esac
+}
+
+# install_packages installa i pacchetti indicati per ciascuna famiglia di
+# distribuzioni: install_packages <descrizione> <debian> <fedora> <arch> <suse>.
+install_packages() {
+	local what="$1"
+	local -a pkgs
+	case "$(distro_family)" in
+	debian)
+		read -ra pkgs <<<"$2"
+		sudo apt-get update
+		sudo apt-get install -y "${pkgs[@]}"
+		;;
+	fedora)
+		read -ra pkgs <<<"$3"
+		sudo dnf install -y "${pkgs[@]}"
+		;;
+	arch)
+		read -ra pkgs <<<"$4"
+		sudo pacman -S --needed --noconfirm "${pkgs[@]}"
+		;;
+	suse)
+		read -ra pkgs <<<"$5"
+		sudo zypper --non-interactive install "${pkgs[@]}"
+		;;
+	*) fail "Distribuzione non riconosciuta: installa ${what} con il gestore di pacchetti e rilancia lo script." ;;
+	esac
+}
+
+# install_wine installa Wine con il gestore di pacchetti della distribuzione.
+install_wine() {
+	if command -v wine >/dev/null 2>&1; then
+		info "Wine già installato: $(wine --version 2>/dev/null || echo 'versione sconosciuta')"
+		return
+	fi
+	case "$(uname -m)" in
+	x86_64 | amd64) ;;
+	*)
+		warn "Wine non installato: su $(uname -m) non può eseguire programmi Windows per x64."
+		return
+		;;
+	esac
 
 	info "Installazione di Wine (richiede sudo)"
-	case " ${id} ${like} " in
-	*" debian "* | *" ubuntu "*)
-		if [[ "$(dpkg --print-architecture)" == "amd64" ]]; then
-			# La parte a 32 bit di Wine serve per provare l'eseguibile x86.
-			if ! dpkg --print-foreign-architectures | grep -qx i386; then
-				sudo dpkg --add-architecture i386
-			fi
-			sudo apt-get update
-			sudo apt-get install -y wine wine64 wine32:i386
-		else
-			sudo apt-get update
-			sudo apt-get install -y wine
-		fi
-		;;
-	*" fedora "*) sudo dnf install -y wine ;;
-	*" arch "*) sudo pacman -S --needed --noconfirm wine ;;
-	*" suse "* | *" opensuse "*) sudo zypper --non-interactive install wine ;;
-	*) fail "Distribuzione non riconosciuta (${id:-sconosciuta}): installa Wine con il gestore di pacchetti e rilancia lo script." ;;
-	esac
+	install_packages Wine "wine" "wine" "wine" "wine"
+}
+
+# install_qemu installa QEMU (macchine virtuali di test) e xorriso (crea il
+# CD dell'installazione non presidiata di Windows).
+install_qemu() {
+	if command -v qemu-system-x86_64 >/dev/null 2>&1 && command -v qemu-img >/dev/null 2>&1 &&
+		command -v xorriso >/dev/null 2>&1; then
+		info "QEMU già installato: $(qemu-system-x86_64 --version | head -n1)"
+	else
+		info "Installazione di QEMU e xorriso (richiede sudo)"
+		install_packages QEMU \
+			"qemu-system-x86 qemu-utils xorriso" \
+			"qemu-system-x86 qemu-img xorriso" \
+			"qemu-system-x86 qemu-img libisoburn" \
+			"qemu-x86 qemu-tools xorriso"
+	fi
+
+	# Senza accesso a KVM le macchine virtuali sono troppo lente.
+	if [[ ! -e /dev/kvm ]]; then
+		warn "KVM non disponibile: abilita la virtualizzazione (VT-x/AMD-V) nel BIOS."
+	elif [[ ! -r /dev/kvm || ! -w /dev/kvm ]]; then
+		warn "Nessun accesso a /dev/kvm: esegui 'sudo usermod -aG kvm ${USER}' e riaccedi."
+	fi
 }
 
 main() {
@@ -212,6 +256,7 @@ main() {
 	install_tools
 	download_modules
 	install_wine
+	install_qemu
 
 	info "Completato: $(go version)"
 	echo "Apri un nuovo terminale (o esegui 'source ~/.profile') per avere go nel PATH."
