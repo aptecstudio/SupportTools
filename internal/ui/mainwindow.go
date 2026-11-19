@@ -19,6 +19,10 @@ import (
 // AppName è il nome del programma mostrato all'utente.
 const AppName = "Support Tools"
 
+// iconResourceID è l'ID della risorsa dell'icona incorporata da rsrc, che
+// assegna 1 al manifest e 2 al gruppo dell'icona.
+const iconResourceID = 2
+
 // sidebarWidth è la larghezza fissa della barra laterale, a 96 DPI.
 const sidebarWidth = 230
 
@@ -71,6 +75,14 @@ func Run() error {
 	}.Create()
 	if err != nil {
 		return fmt.Errorf("creazione della finestra principale: %w", err)
+	}
+
+	// Senza icona incorporata (file .ico assente al momento della build) la
+	// finestra mantiene quella predefinita di Windows.
+	if icon, err := walk.NewIconFromResourceId(iconResourceID); err == nil {
+		if err := w.SetIcon(icon); err != nil {
+			return fmt.Errorf("impostazione dell'icona: %w", err)
+		}
 	}
 
 	for _, g := range w.model.roots {
