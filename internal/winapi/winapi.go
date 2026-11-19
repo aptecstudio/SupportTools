@@ -304,6 +304,29 @@ func SetPasswordExpired(name string, expired bool) error {
 	})
 }
 
+// UserDetails sono i dettagli di un account letti da USER_INFO_3.
+type UserDetails struct {
+	FullName string
+	Flags    uint32
+	// PasswordExpired indica l'obbligo di cambiare la password al prossimo
+	// accesso.
+	PasswordExpired bool
+}
+
+// GetUserDetails legge i dettagli dell'account name.
+func GetUserDetails(name string) (UserDetails, error) {
+	var d UserDetails
+	err := withUserInfo3(name, func(info *UserInfo3) error {
+		d = UserDetails{
+			FullName:        UTF16PtrToString(info.FullName),
+			Flags:           info.Flags,
+			PasswordExpired: info.PasswordExpired != 0,
+		}
+		return nil
+	})
+	return d, err
+}
+
 // withUserInfo3 legge USER_INFO_3 di name e lo passa a fn prima di liberarlo.
 func withUserInfo3(name string, fn func(info *UserInfo3) error) error {
 	pName, err := windows.UTF16PtrFromString(name)
