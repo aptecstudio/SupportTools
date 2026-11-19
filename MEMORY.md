@@ -10,7 +10,7 @@ Registro delle scelte tecniche e delle convenzioni. Ogni voce riporta data e mot
 - Modulo Go: `github.com/aptecstudio/supporttools`.
 
 ### 2026-11-18 — Piattaforma di destinazione
-- Il programma gira su **Windows 7 e successivi** (x86 e x64).
+- Il programma gira su **Windows 7 e successivi**, **solo a 64 bit (x64)** (vedi la decisione del 2026-11-19 sull'abbandono del 32 bit).
 - Si compila da Linux, Windows e macOS tramite cross-compilazione (`GOOS=windows`).
 - Per mantenere la cross-compilazione semplice si evita CGO (`CGO_ENABLED=0`) dove possibile.
 
@@ -66,7 +66,7 @@ Registro delle scelte tecniche e delle convenzioni. Ogni voce riporta data e mot
   - installano `rsrc` v0.10.2 (MIT, solo strumento di build: incorpora manifest e icona nell'eseguibile) e `goimports` da `golang.org/x/tools` v0.24.0 (ultima versione compatibile con Go 1.20);
   - scaricano e verificano i moduli di `go.mod`.
 - **Wine** è una dipendenza di sviluppo obbligatoria su Linux e macOS (2026-11-18), per provare l'interfaccia senza Windows:
-  - Linux: dal gestore di pacchetti (apt, dnf, pacman, zypper); su Debian/Ubuntu amd64 si abilita `i386` e si installa `wine32:i386` per la versione x86. Su architetture diverse da x86 viene saltato con un avviso.
+  - Linux: dal gestore di pacchetti (apt, dnf, pacman, zypper). Su architetture diverse da x86_64 viene saltato con un avviso.
   - macOS: Homebrew ha disattivato il cask `wine-stable` il 2026-09-01 (non supera Gatekeeper), quindi lo script scarica la build ufficiale `wine-stable-11.0_1-osx64.tar.xz` da `Gcenx/macOS_Wine_builds` su GitHub, ne verifica lo SHA-256, la installa in `/Applications/Wine Stable.app`, toglie l'attributo di quarantena solo a quell'app e aggiunge il suo `bin` al `PATH`. Su Apple Silicon installa Rosetta 2. Richiede macOS 10.15+.
 - I file `.ps1` sono salvati in **UTF-8 con BOM**: senza BOM Windows PowerShell 5.1 li legge come ANSI e storpia le lettere accentate dei messaggi. Terminatori di riga LF come il resto del progetto (PowerShell li accetta).
 - Moduli Go adottati: `lxn/walk` (v0.0.0-20210112085537-c389da54e794) e `lxn/win` (v0.0.0-20210218163916-a377121e959e), ultime versioni disponibili; portano con sé `golang.org/x/sys` (v0.0.0-20201018230417-eeed37f84f13) e `gopkg.in/Knetic/govaluate.v3` v3.0.0 (MIT, compatibile con la GPL v3).
@@ -89,19 +89,36 @@ Registro delle scelte tecniche e delle convenzioni. Ogni voce riporta data e mot
 - Primo tool: **Informazioni** (gruppo Generale) con versione, avviso di licenza GPL e collegamento al repository.
 
 ### 2026-11-18 — Build
-- Programma di build in Go, identico su tutti i sistemi: `go run ./build [-arch all|x64|x86] [-skip-checks]`.
-- Verifica che la toolchain sia Go 1.20.x, esegue `gofmt -l` e `go vet` (GOOS=windows, entrambe le architetture), incorpora manifest e icona con `rsrc` (file `rsrc_windows_<goarch>.syso`, ignorati da Git) e compila con `CGO_ENABLED=0`, `-trimpath`, `-H windowsgui`.
-- Output: `dist/x64/SupportTools.exe` e `dist/x86/SupportTools.exe`, ciascuno con `LICENSE` e `THIRD_PARTY_NOTICES.md` accanto.
+- Programma di build in Go, identico su tutti i sistemi: `go run ./build [-arch all|x64] [-skip-checks]`.
+- Verifica che la toolchain sia Go 1.20.x, esegue `gofmt -l` e `go vet` (GOOS=windows, x64), incorpora manifest e icona con `rsrc` (file `rsrc_windows_<goarch>.syso`, ignorati da Git) e compila con `CGO_ENABLED=0`, `-trimpath`, `-H windowsgui`.
+- Output: `dist/x64/SupportTools.exe`, con `LICENSE` e `THIRD_PARTY_NOTICES.md` accanto.
 - Opzione `-tags`: tag di build aggiuntivi; l'output va in `dist/<arch>-<tag>/`. Il tag `demo` include i tool di prova (`internal/modules/demo`, importati da `cmd/supporttools/modules_demo.go`), **mai presenti nei rilasci**.
-- Opzione `-run`: avvia l'eseguibile appena compilato (x64, salvo `-arch x86`). Su Windows tramite `cmd /c start`, che rispetta la richiesta di elevazione; su Linux e macOS con Wine, in un prefisso dedicato nella cartella di cache dell'utente (`<UserCacheDir>/SupportTools/wine`), con `WINEDLLOVERRIDES=mscoree,mshtml=` (niente richieste di installare Mono/Gecko) e `WINEDEBUG=-all`.
+- Opzione `-run`: avvia l'eseguibile appena compilato (x64). Su Windows tramite `cmd /c start`, che rispetta la richiesta di elevazione; su Linux e macOS con Wine, in un prefisso dedicato nella cartella di cache dell'utente (`<UserCacheDir>/SupportTools/wine`), con `WINEDLLOVERRIDES=mscoree,mshtml=` (niente richieste di installare Mono/Gecko) e `WINEDEBUG=-all`.
 - La logica non grafica (es. stima dei tempi) sta in file senza vincolo `windows`, così i test girano con `go test ./...` su qualsiasi sistema.
 
 ### 2026-11-18 — Manifest
 - `requireAdministrator`, Common Controls 6 (necessari a walk per gli stili visuali), `supportedOS` da Windows 7 a Windows 10/11, DPI `PerMonitorV2, PerMonitor` con fallback `dpiAware`.
 
+### 2026-11-18 — Icona
+- Chiave inglese bianca in diagonale su un quadrato blu arrotondato con sfumatura verticale (`#2F86E8` → `#174A9A`) e leggera ombra.
+- Generata dal codice con `go run ./build/icon`: le forme sono geometriche e ogni dimensione viene disegnata alla propria risoluzione, con supersampling 8×8. Il file prodotto, `cmd/supporttools/supporttools.ico`, è versionato.
+- Dimensioni: 16, 20, 24, 32, 40, 48, 64 e 256 pixel. Fino a 64 sono bitmap a 32 bit con maschera, compatibili con tutte le versioni di Windows; 256 è PNG, supportato da Vista in poi. Il foro del manico compare solo da 32 pixel in su.
+- rsrc assegna l'ID 1 al manifest e l'ID 2 al gruppo dell'icona: la finestra principale carica l'icona con l'ID 2 (`iconResourceID`). Senza icona incorporata resta quella predefinita di Windows.
+- Può essere sostituita in qualsiasi momento con un file `.ico` disegnato a mano, con lo stesso nome.
+
 ### 2026-11-18 — Strategia di test
 - **Wine** per le prove rapide dell'interfaccia durante lo sviluppo (`go run ./build -run`).
 - Wine non sostituisce Windows: API di gestione utenti, profili, registro, DPAPI e privilegi di amministratore si comportano diversamente. Le funzionalità vanno provate su **Windows 7 e Windows 10/11** reali o in macchina virtuale prima di ogni rilascio.
+- Macchine virtuali di test con **QEMU**, su Linux (accelerazione KVM) e su macOS (accelerazione HVF sui Mac Intel). Scelto al posto di VirtualBox (2026-11-18) perché su Linux è già supportato da KVM, è nei repository delle distribuzioni e permette di automatizzare anche tastiera e mouse dell'interfaccia (QMP).
+- Macchine di test (2026-11-18, aggiornato 2026-11-19): **`win10`** (Windows 10 x64, 3 GB di RAM, prova l'eseguibile x64) e **`win7`** (Windows 7 SP1 x64, 2 GB, prova l'eseguibile x64 e la compatibilità con Windows 7). Una alla volta, per i limiti di RAM. Windows 11 solo come verifica finale prima dei rilasci, su un PC con più risorse. Le ISO le procura l'umano e restano fuori dal repository.
+- Implementazione (programma `vm/`, `go run ./vm …`):
+  - hardware virtuale compatibile con i driver inclusi in Windows 7 e 10, senza virtio: chipset i440fx, dischi IDE, rete e1000 in modalità utente, tavoletta USB, scheda video standard;
+  - installazione non presidiata con `autounattend.xml` e `stsetup.cmd` (modelli in `vm/templates/`, convertiti in CRLF) su un secondo CD creato con xorriso (Linux) o hdiutil (macOS); crea l'amministratore `tester`, attiva l'accesso automatico permanente, disattiva Windows Update e la sospensione, esclude `C:\stagent` da Defender;
+  - **agente proprio** (`vm/agent`, Go per Windows, compilato per l'architettura della macchina) invece del guest agent di QEMU, i cui driver virtio non supportano più Windows 7: avviato all'accesso di `tester` da un'attività pianificata con privilegi più elevati nella sessione interattiva, chiede i lavori all'host via HTTP (`10.0.2.2:47800`, che QEMU inoltra a `127.0.0.1` dell'host), scarica i file, esegue e invia l'esito. Protocollo in `vm/internal/protocol`: cambiarlo richiede di reinstallare le macchine;
+  - controllo della macchina via QMP (socket Unix): schermate PNG e spegnimento;
+  - `test`, `screenshot` e `start` usano `-snapshot` di QEMU: ogni esecuzione parte da Windows pulito;
+  - Windows 10 si installa con la chiave generica pubblica di Windows 10 Pro (non attiva Windows); Windows 7 senza chiave, dall'edizione con indice 1 della ISO.
+- **Test di integrazione** con tag di build `integration` (es. `internal/users/integration_windows_test.go`): agiscono su account e profili reali, quindi si eseguono solo nelle macchine virtuali con `go run ./vm test <macchina>`; l'elenco dei package è in `vm/commands.go`.
 
 ### 2026-11-18 — Gestione utenti locali (Fase 1)
 - **Pagina unica** "Gestione utenti" (gruppo Utenti locali): elenco degli utenti locali e pulsanti Nuovo utente, Cambia password, Rimuovi password, Elimina utente, Aggiorna.
@@ -112,6 +129,62 @@ Registro delle scelte tecniche e delle convenzioni. Ogni voce riporta data e mot
 - Gruppi Administrators e Users individuati tramite SID noti (S-1-5-32-544, S-1-5-32-545), perché il nome cambia con la lingua di Windows.
 - Cambio e rimozione della password con avviso: reimpostare la password da amministratore fa perdere all'utente l'accesso a file cifrati EFS, credenziali salvate e password dei browser protette da DPAPI.
 - Chiamate NetAPI (`netapi32.dll`) e `userenv.dll` dichiarate nel package `internal/winapi`, perché la versione di `golang.org/x/sys` in uso non le espone.
+
+### 2026-11-19 — Backup di file e impostazioni (Fase 2)
+- **Formato del backup**: una cartella per backup (es. `Backup_<utente>_<data>`) con i file copiati così come sono (non compressi) e un `manifest.json`. Scelto per poter sfogliare e recuperare i file da Esplora risorse anche senza il programma, reggere file grandi e riprendere dopo un'interruzione.
+- **Manifest** (`manifest.json`): contenuto del backup, versione del formato, data, utente sorgente, computer e voci incluse.
+- **Destinazione**: una cartella qualsiasi, su disco interno, USB o percorso di rete `\\server\condivisione`; per le condivisioni che le richiedono si chiedono nome utente e password. Prima di iniziare si controlla lo spazio libero.
+- **File dell'utente**, cartelle selezionabili:
+  - cartelle standard con la dimensione accanto: Desktop, Documenti, Immagini, Musica, Video, Download, Preferiti;
+  - cartelle qualsiasi aggiunte a mano, del profilo o del disco;
+  - dischi fissi fisici diversi dal disco di sistema, per intero;
+  - cartelle nella radice del disco di sistema che non sono cartelle di sistema (es. `C:\Dati`).
+  - La copia prosegue dopo l'errore sul singolo file e riepiloga i file non copiati.
+- **Browser**: nella prima versione Chrome, Edge (Chromium) e Firefox. Per ciascun browser e profilo si scelgono le singole voci: segnalibri, password, cronologia, estensioni, impostazioni. Cache e file temporanei sempre esclusi.
+- **Password dei browser**: le password dei browser Chromium sono legate all'utente Windows. Si leggono nel contesto dell'utente sorgente e nel backup vengono protette da una **password del backup** scelta dal tecnico, per poterle ripristinare altrove nella Fase 3. Firefox usa un formato già portabile. Da verificare su Windows reale il comportamento con le versioni recenti di Chrome/Edge, che aggiungono una protezione a livello di sistema.
+- **Utente sorgente senza password**: l'accesso ai suoi dati protetti è limitato da un criterio di Windows. Si sblocca temporaneamente quel criterio, si leggono le password e lo si **ripristina subito**; lo stato iniziale va ripristinato anche se il programma si interrompe a metà (controllo e recupero al riavvio).
+- **Impostazioni di sistema** nella prima versione: reti Wi-Fi salvate con le password; stampanti dell'utente (con la predefinita) e unità di rete collegate; sfondo e aspetto (immagine e colore dello sfondo, tema chiaro/scuro, colore principale); lingua, layout di tastiera e formati di data, ora e numeri. Le altre voci restano per una versione successiva.
+
+### 2026-11-19 — Recupero offline delle password dei browser (Windows non avviabile)
+- **Scenario**: recuperare le password dei browser di un cliente quando il suo Windows **non si avvia**, da ambiente di ripristino. È uno scenario distinto dalla Fase 2 (che legge le password nel contesto dell'utente in esecuzione). Si fa **solo previa autorizzazione del cliente** e con la **sua password Windows**, che il cliente fornisce.
+- **Dove gira (entrambi gli scenari, scelta del 2026-11-19)**:
+  - disco del cliente **montato su un PC Windows funzionante** (adattatore USB o come secondo disco): `SupportTools.exe` gira normalmente e legge file e hive dal volume montato — è il metodo standard del data recovery;
+  - dentro un ambiente **WinPE** avviato da USB sul PC del cliente: da verificare il funzionamento della GUI walk e delle API disponibili in WinPE.
+- **Copertura (scelta del 2026-11-19)**: tutte le generazioni di cifratura dei browser Chromium, **incluso App-Bound Encryption (ABE, "v20")** di Chrome ≥127 ed Edge recenti.
+- **Catena di decifratura offline** (dal disco montato, nessuna chiamata a Windows avviato):
+  - *livello utente* (DPAPI diretto e chiave AES in `Local State`, prefissi `v10`/`v11`): servono `Login Data`, `Local State`, i masterkey DPAPI dell'utente (`…\Microsoft\Protect\<SID>\`) e la **password Windows dell'utente** per sbloccare il masterkey;
+  - *livello ABE* (prefisso `v20`): la chiave app-bound è wrappata due volte, con DPAPI utente **e** DPAPI di macchina. Serve in più il masterkey **di macchina** (`…\Microsoft\Protect\S-1-5-18\`), che si sblocca con il LSA secret `DPAPI_SYSTEM`, ricavato dagli hive di registro `SYSTEM` (bootkey) e `SECURITY` presenti sul disco. Nessuna password utente per questo livello.
+  - Offline la **path-validation** del servizio ABE non si applica (non si passa per il servizio SYSTEM): avendo entrambi i masterkey si ottiene la chiave app-bound e si decifra con AES-GCM. I vecchi strumenti "avvia e scarica" falliscono su Chrome 127+ perché estraggono solo blob cifrati.
+- **Implementazione (scelta del 2026-11-19)**: catena DPAPI offline con una **libreria/port Go esistente**, non riscritta a mano.
+  - **Valutazione librerie (2026-11-19)**:
+    - [`wat4r/dpapitk`](https://pkg.go.dev/github.com/wat4r/dpapitk) — Apache-2.0 (compatibile GPL-3.0), `go 1.19` (**ok con Go 1.20**), unica dipendenza `golang.org/x/crypto`. Copre: decifratura masterkey con password/hash/PVK (chiave di backup di dominio), blob DPAPI e **DPAPI-NG/CNG**. **Non** copre: contesto SYSTEM/di macchina, LSA secret, parsing degli hive di registro, né Chrome/ABE. Progetto piccolo (ultimo commit dic 2024).
+    - [`mandiant/gopacket`](https://pkg.go.dev/github.com/mandiant/gopacket/pkg/dpapi) (pkg `pkg/dpapi`, reimplementazione Go di Impacket) — Apache-2.0 (+ file `NOTICE` da riprodurre), molto più completa: masterkey offline, cronologia credenziali (hash NT), vault, chiave di backup di dominio/BKRP, `ParsePrivateKeyData` da **LSA secret**, e un package `pkg/registry` per gli **hive di registro**. **Ma richiede Go ≥1.24/1.25**: incompatibile con il vincolo Go 1.20 / Windows 7, e trascina molte dipendenze (LDAP/SMB/Kerberos/MSRPC). Nessun DPAPI-NG/CNG.
+    - Nessuna delle due copre l'ABE/`v20` (atteso).
+    - I wrapper della Windows API (`billgraziano/dpapi`, `jghiloni/dpapi`) **non servono** (richiedono Windows avviato).
+  - **Scelta (2026-11-19): opzione A.** Si resta a **un solo binario** Go 1.20 / Windows 7. Si usa **`wat4r/dpapitk`** per i primitivi DPAPI/CNG (decifratura masterkey con password/hash/PVK, blob DPAPI e DPAPI-NG/CNG) e si **implementano in proprio** i pezzi mancanti, compatibili con Go 1.20:
+    - parsing degli hive di registro `SYSTEM` e `SECURITY` dal disco → bootkey → LSA secret `DPAPI_SYSTEM` → sblocco del masterkey DPAPI **di macchina** (`…\S-1-5-18\`);
+    - strato **ABE/`v20`**: scartare i due livelli DPAPI (utente + macchina) e AES-GCM finale.
+    - Dove utile si **porta** il codice Apache-2.0 dei package `pkg/registry`/`pkg/dpapi` di `mandiant/gopacket` in un nostro package Go 1.20 (attribuzione Apache in `THIRD_PARTY_NOTICES.md`). Scartata l'opzione B (binario separato con Go recente) per non avere due toolchain, dipendenze pesanti e più avvisi di licenza.
+    - L'avviso di licenza di `wat4r/dpapitk` (Apache-2.0) va aggiunto a `THIRD_PARTY_NOTICES.md` all'introduzione della dipendenza.
+  - Prima di adottare una libreria vanno verificate la **compatibilità della licenza con GPL-3.0** e la **compatibilità con Go 1.20**, e il relativo avviso va aggiunto a `THIRD_PARTY_NOTICES.md`.
+  - Lo **strato ABE (parsing del blob `v20`)** non ha una libreria Go pronta: va costruito sopra i primitivi DPAPI (scartare i due livelli + AES-GCM). Riferimenti (C++/Python) per il formato: progetti tipo `xaitax/Chrome-App-Bound-Encryption-Decryption`.
+- **Firefox**: usa il proprio archivio NSS (`key4.db` + `logins.json`), già portabile e indipendente da DPAPI; si gestisce a parte.
+- Lo strato di decodifica DPAPI/ABE è condivisibile con la Fase 2 (lettura nel contesto utente vivo): stessa logica di decifratura, sorgente dei masterkey diversa.
+
+### 2026-11-19 — Solo architettura x64 (abbandono del 32 bit)
+- Il prodotto è **solo a 64 bit (x64)**. Motivazione (decisa con l'umano): le macchine a 32 bit sono ormai rare, non vale la pena mantenere il doppio target.
+- Resta il supporto a **Windows 7 (x64)** e successivi, quindi resta il vincolo **Go 1.20** (ultima versione che genera eseguibili per Windows 7).
+- Modifiche applicate:
+  - `build`: rimosso il target `x86`/`386`; `-arch` accetta `all` o `x64`; output solo `dist/x64/`.
+  - macchine di test: `win7` convertita a **x64** (`goarch amd64`, `unattendArch amd64`, 2 GB di RAM, disco 32 GB); l'ISO di Windows 7 deve essere **x64** e, se in inglese, va passato `-lang en-US` all'installazione.
+  - `autounattend.xml` (Win7, ramo `else` del blocco `.Modern`): aggiunto `<SkipMachineOOBE>true</SkipMachineOOBE>`. Senza, l'installazione non presidiata di Windows 7 si bloccava sulla pagina OOBE "Type your product key" (Win7 Ultimate non ha una chiave generica; la pagina ha un pulsante *Skip* ma va saltata in automatico). Verificato il 2026-11-19: win10 e win7 si installano entrambe correttamente.
+  - `scripts/setup-linux.sh`: niente più Wine a 32 bit (`wine32:i386`, `dpkg --add-architecture i386`); si installa solo `wine` (x64). Il rilevamento di un host Linux a 32 bit per scaricare Go resta (riguarda la macchina di sviluppo, non il target).
+  - documenti (`MEMORY.md`, `ROADMAP.md`, `README.md`) aggiornati.
+- L'icona "a 32 bit" nei commenti è la **profondità colore** (BGRA), non la CPU: invariata.
+
+### 2026-11-19 — Macchine di test da un editor impacchettato come snap
+- Lanciando `go run ./vm …` da un editor snap (es. VS Code snap), QEMU apre la finestra GTK con i moduli dello snap e trascina librerie incompatibili (la `libpthread` di `core20`), fallendo con `undefined symbol __libc_pthread_init`.
+- Soluzione nel programma `vm` (`hostEnv` in `vm/util.go`): i processi QEMU vengono avviati con un ambiente ripulito dalle variabili che redirigono il caricamento dentro lo snap (`LD_LIBRARY_PATH` filtrato; `GTK_PATH`, `GIO_MODULE_DIR`, `GDK_PIXBUF_*`, `GSETTINGS_SCHEMA_DIR`, `LOCPATH`, ecc. rimosse). Gli snap stanno sia in `/snap/...` sia nei dati utente `~/snap/...`, quindi il riconoscimento cerca il segmento `/snap/` ovunque nel percorso.
 
 ## Convenzioni
 
@@ -127,4 +200,5 @@ Registro delle scelte tecniche e delle convenzioni. Ogni voce riporta data e mot
 
 ## Da decidere
 
-- Formato del pacchetto di backup (cartella, archivio ZIP, cifratura).
+- Nome e posizione predefiniti della cartella di backup e regole in caso di cartella già esistente.
+- Come proteggere la password del backup nel `manifest.json` (algoritmo e verifica all'apertura in Fase 3).
