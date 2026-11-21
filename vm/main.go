@@ -10,6 +10,7 @@
 //	go run ./vm test <macchina> [-show]
 //	go run ./vm screenshot <macchina> [-tags demo] [-wait 20s] [-show]
 //	go run ./vm start <macchina> [-tags demo] [-persist]
+//	go run ./vm input <macchina> [-launch] [-tags demo] <azione>...
 //
 // Le macchine disponibili sono win10 (Windows 10 x64) e win7 (Windows 7
 // SP1 x64); i dischi stanno in ~/VM/SupportTools (o in SUPPORTTOOLS_VM_DIR).
@@ -38,7 +39,8 @@ func main() {
 
 func usage() error {
 	return errors.New("uso: go run ./vm list | install <macchina> -iso <file.iso> | " +
-		"test <macchina> | screenshot <macchina> | start <macchina> (aggiungi -h per le opzioni)")
+		"test <macchina> | screenshot <macchina> | start <macchina> | " +
+		"input <macchina> <azione>... (aggiungi -h per le opzioni)")
 }
 
 func run(args []string) error {
@@ -94,6 +96,20 @@ func run(args []string) error {
 		persist := fs.Bool("persist", false, "conserva le modifiche al disco allo spegnimento")
 		fs.Parse(args[1:])
 		return start(m, *tags, sessionOptions{snapshot: !*persist, show: true, allowTCG: *allowTCG})
+
+	case "input":
+		tags := fs.String("tags", "", "tag di build del programma (es. demo)")
+		launch := fs.Bool("launch", false, "avvia Support Tools prima di eseguire lo script")
+		warmup := fs.Duration("warmup", 15*time.Second, "attesa dopo l'avvio del programma, prima dello script")
+		show := fs.Bool("show", true, "mostra la finestra della macchina")
+		fs.Parse(args[1:])
+		return input(m, inputOptions{
+			session: sessionOptions{snapshot: true, show: *show, allowTCG: *allowTCG},
+			tags:    *tags,
+			launch:  *launch,
+			warmup:  *warmup,
+			actions: fs.Args(),
+		})
 	}
 	return usage()
 }

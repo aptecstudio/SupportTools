@@ -23,7 +23,7 @@ Tool di supporto tecnico per Windows (da Windows 7 in poi), scritto in Go, compi
 - [x] Aggiunta degli avvisi di lxn/walk, lxn/win, golang.org/x/sys e govaluate all'introduzione delle dipendenze
 - [x] Wine tra le dipendenze di Linux e macOS e avvio di prova con `go run ./build -run`
 - [x] Macchine virtuali di test con QEMU (`go run ./vm`): installazione non presidiata di Windows 10 x64 e Windows 7 x64, agente, test di integrazione e schermate — **win10 e win7 installate e verificate il 2026-11-19** (correzione env snap per QEMU e `SkipMachineOOBE` per l'OOBE di Win7)
-- [ ] Invio di clic e tasti all'interfaccia nelle macchine virtuali (QMP), per automatizzare le prove dell'interfaccia
+- [x] Invio di clic e tasti all'interfaccia nelle macchine virtuali (QMP), per automatizzare le prove dell'interfaccia — `go run ./vm input`, primitivi mouse/tastiera testati a unità e **verificati dal vivo su Windows 10 x64** (clic, navigazione dell'albero e tasti, 2026-11-21)
 - [x] Script di installazione delle dipendenze di sviluppo per Linux, macOS e Windows (`scripts/setup-linux.sh`, `scripts/setup-macos.sh`, `scripts/setup-windows.ps1`)
 - [x] Definizione del canale di distribuzione (GitHub Releases)
 - [ ] Pubblicazione automatica dell'eseguibile su GitHub Releases alla creazione di un tag `vX.Y.Z`
