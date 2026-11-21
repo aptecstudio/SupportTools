@@ -15,7 +15,7 @@ Tool di supporto tecnico per Windows (da Windows 7 in poi), scritto in Go, compi
 - [x] Finestra principale con barra laterale e primo tool "Informazioni"
 - [x] Script di build cross-platform (Linux, Windows, macOS → eseguibile Windows): `go run ./build`
 - [x] Manifest dell'applicazione (privilegi di amministratore, stili visuali)
-- [ ] Verifica dell'avvio su Windows 7 e Windows 10/11 (x64), compreso il componente di avanzamento (build `-tags demo`)
+- [x] Verifica dell'avvio su Windows 7 e Windows 10/11 (x64), compreso il componente di avanzamento (build `-tags demo`) — **Windows 10 x64 e Windows 7 SP1 x64 verificati il 2026-11-21** (avvio, interfaccia, navigazione e finestra di avanzamento con barra, percentuale, tempo rimanente, dettagli e annulla); Windows 11 resta come verifica finale pre-rilascio
 - [x] Icona dell'applicazione (`cmd/supporttools/supporttools.ico`, generata con `go run ./build/icon`) e icona della finestra principale
 - [x] Componente riutilizzabile di avanzamento per le operazioni lente: barra con percentuale, tempo rimanente, sezione "Dettagli" espandibile con le operazioni concluse e in lavorazione
 - [x] Licenza GPL v3.0 o successive e verifica di compatibilità con Go
